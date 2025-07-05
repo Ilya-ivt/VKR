@@ -1,0 +1,14 @@
+{% extends "main/base.html" %}
+{% block content %}
+<div class="container">
+    <h2>Добавить материал для курса "{{ course.title }}"</h2>
+    
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-success">Добавить</button>
+    </form>
+
+    <a href="{% url 'main:course_detail' course.id %}" class="btn btn-secondary mt-2">Назад к курсу</a>
+</div>
+{% endblock %}

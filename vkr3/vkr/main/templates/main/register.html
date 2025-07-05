@@ -1,0 +1,61 @@
+{% extends "main/base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <h2 class="text-center">Регистрация</h2>
+            <form method="post" class="p-4 border rounded shadow bg-white">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label for="{{ form.first_name.id_for_label }}" class="form-label">Имя</label>
+                    {{ form.first_name }}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.last_name.id_for_label }}" class="form-label">Фамилия</label>
+                    {{ form.last_name }}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.username.id_for_label }}" class="form-label">Логин</label>
+                    {{ form.username }}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.email.id_for_label }}" class="form-label">Email</label>
+                    {{ form.email }}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.password1.id_for_label }}" class="form-label">Пароль</label>
+                    {{ form.password1 }}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.password2.id_for_label }}" class="form-label">Подтверждение пароля</label>
+                    {{ form.password2 }}
+                </div>
+
+                <button type="submit" class="btn btn-success w-100">Зарегистрироваться</button>
+                <div class="text-center mt-3">
+                    <a href="{% url 'main:login' %}" class="d-block mt-1 text-muted">Авторизироваться</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    body {
+        background-color: #f8f9fa;
+    }
+    .form-control, .form-select {
+        border-radius: 10px;
+    }
+    .btn-success {
+        border-radius: 10px;
+    }
+</style>
+{% endblock %}

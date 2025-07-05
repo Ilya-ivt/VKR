@@ -1,0 +1,73 @@
+{% extends "main/base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- Карточка профиля -->
+            <div class="card shadow rounded-4">
+                <div class="card-body">
+                    <h3 class="card-title mb-4 text-center">👤 Профиль</h3>
+                    <div class="row mb-3">
+                        <div class="col-sm-4 text-muted">Логин:</div>
+                        <div class="col-sm-8">{{ user.username }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4 text-muted">Имя:</div>
+                        <div class="col-sm-8">{{ user.first_name }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4 text-muted">Фамилия:</div>
+                        <div class="col-sm-8">{{ user.last_name }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4 text-muted">Email:</div>
+                        <div class="col-sm-8">{{ user.email }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4 text-muted">Дата регистрации:</div>
+                        <div class="col-sm-8">{{ user.date_joined|date:"d.m.Y H:i" }}</div>
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col-sm-4 text-muted">Роль:</div>
+                        <div class="col-sm-8">{{ user.get_role_display }}</div>
+                    </div>
+
+                    {% if user.role == "student" %}
+                        <div class="row mb-3">
+                            <div class="col-sm-4 text-muted">Группа:</div>
+                            <div class="col-sm-8">{{ user.group }}</div>
+                        </div>
+                        <div class="row mb-4">
+                            <div class="col-sm-4 text-muted">Курс:</div>
+                            <div class="col-sm-8">{{ user.course_year }}</div>
+                        </div>
+                    {% endif %}
+
+                    <h5 class="text-primary">📚 Ваши курсы:</h5>
+                    <ul class="list-group list-group-flush mb-4">
+                        {% if user.role == "student" %}
+                            {% for course in student_courses %}
+                                <li class="list-group-item">{{ course.title }}</li>
+                            {% empty %}
+                                <li class="list-group-item text-muted">Вы пока не записаны ни на один курс.</li>
+                            {% endfor %}
+                        {% elif user.role == "teacher" or user.role == "admin" %}
+                            {% for course in teacher_courses %}
+                                <li class="list-group-item">{{ course.title }}</li>
+                            {% empty %}
+                                <li class="list-group-item text-muted">Вы пока не создали ни одного курса.</li>
+                            {% endfor %}
+                        {% endif %}
+                    </ul>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'main:password_change' %}" class="btn btn-outline-primary">🔑 Сменить пароль</a>
+                        <a href="{% url 'main:profile_edit' %}" class="btn btn-outline-secondary">✏️ Изменить данные</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

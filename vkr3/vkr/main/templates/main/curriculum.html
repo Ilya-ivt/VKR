@@ -1,0 +1,128 @@
+{% extends "main/base.html" %}
+{% load static %}
+
+
+
+{% block content %}
+
+<style>
+        .nav-pills .nav-link {
+            background-color: #e9ecef;
+            color: #007bff;
+            margin-right: 5px;
+            border-radius: 20px;
+            transition: all 0.2s;
+        }
+        .nav-pills .nav-link:hover {
+            background-color: #d6d8db;
+        }
+
+        .nav-pills .nav-link.active {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+        }
+        /* Обычные вкладки */
+        /* Все вкладки: черный текст, белый фон */
+        .nav-tabs .nav-link {
+            color: #000 !important;
+            background-color: #fff !important;
+            border: 1px solid #dee2e6;
+            margin-right: 2px;
+        }
+
+        /* Активная вкладка */
+        .nav-tabs .nav-link.active {
+            color: #000 !important;
+            background-color: #e9ecef !important;
+            border-color: #dee2e6 #dee2e6 #fff;
+        }
+
+        /* Ховер */
+        .nav-tabs .nav-link:hover {
+            color: #000 !important;
+            background-color: #f8f9fa !important;
+        }
+</style>
+
+<div class="container mt-4">
+    <h2 class="mb-4">📘 Учебный план</h2>
+
+    {% if course_semesters %}
+        <!-- Вкладки курсов -->
+        <ul class="nav nav-pills mb-3" id="courseTabs" role="tablist">
+            {% for course, semesters in course_semesters.items %}
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link {% if forloop.first %}active{% endif %}" id="course-{{ course }}-tab"
+                            data-bs-toggle="pill" data-bs-target="#course-{{ course }}" type="button" role="tab">
+                        {{ course }} курс
+                    </button>
+                </li>
+            {% endfor %}
+        </ul>
+
+        <!-- Контент курсов -->
+        <div class="tab-content" id="courseTabsContent">
+            {% for course, semesters in course_semesters.items %}
+                <div class="tab-pane fade {% if forloop.first %}show active{% endif %}" id="course-{{ course }}" role="tabpanel">
+
+                    <!-- Вкладки семестров -->
+                    <ul class="nav nav-tabs mb-3" id="semesterTabs-{{ course }}" role="tablist">
+                        {% for semester, items in semesters.items %}
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link {% if forloop.first %}active{% endif %}" id="course-{{ course }}-sem-{{ semester }}-tab"
+                                        data-bs-toggle="tab" data-bs-target="#course-{{ course }}-sem-{{ semester }}" type="button" role="tab">
+                                    Семестр {{ semester }}
+                                </button>
+                            </li>
+                        {% endfor %}
+                    </ul>
+
+                    <!-- Контент семестров -->
+                    <div class="tab-content">
+                        {% for semester, items in semesters.items %}
+                            <div class="tab-pane fade {% if forloop.first %}show active{% endif %}" id="course-{{ course }}-sem-{{ semester }}" role="tabpanel">
+                                <div class="row g-3">
+                                    {% for entry in items %}
+                                        {% with item=entry.item teacher=entry.teacher %}
+                                            <div class="col-md-6 col-lg-4">
+                                                <div class="card shadow-sm border-0 h-100">
+                                                    <div class="card-body">
+                                                        <h5 class="card-title">{{ item.subject.name }}</h5>
+                                                        <p class="card-text mb-2">
+                                                            <strong>Тип контроля:</strong> {{ item.control_types|default:"-" }}<br>
+                                                            <strong>Работы:</strong> {{ item.work_types|default:"-" }}<br>
+                                                            <strong>Лабораторные:</strong> {{ item.has_laboratory|yesno:"Да,Нет" }}<br>
+                                                            <strong>Преподаватель:</strong>
+                                                            {% if teacher %}
+                                                                {{ teacher.get_full_name }}
+                                                            {% else %}
+                                                                <span class="text-muted">не назначен</span>
+                                                            {% endif %}
+                                                        </p>
+                                                        <button class="btn btn-outline-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#details-{{ item.id }}">
+                                                            Подробнее
+                                                        </button>
+                                                        <div class="collapse mt-2" id="details-{{ item.id }}">
+                                                            <div class="card card-body bg-light">
+                                                                <p class="mb-0">📄 Дополнительная информация по предмету будет здесь.</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endwith %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-warning">Учебный план пока не загружен.</div>
+    {% endif %}
+</div>
+{% endblock %}

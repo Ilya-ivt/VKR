@@ -1,0 +1,25 @@
+{% extends "main/base.html" %}
+{% block title %}Авторизация{% endblock %}
+
+{% block content %}
+<div class="login-container bg-white p-4 rounded shadow-sm mx-auto" style="max-width: 400px; margin-top: 50px;">
+    <h3 class="text-center mb-4">Авторизация</h3>
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="id_username" class="form-label">Логин</label>
+            <input type="text" name="username" id="id_username" class="form-control" placeholder="Введите логин" required>
+        </div>
+        <div class="mb-3">
+            <label for="id_password" class="form-label">Пароль</label>
+            <input type="password" name="password" id="id_password" class="form-control" placeholder="Введите пароль" required>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Войти</button>
+    </form>
+
+    <div class="text-center mt-3">
+        <span class="text-muted">Нет аккаунта?</span>
+        <a href="{% url 'main:register' %}" class="d-block mt-1">Зарегистрироваться</a>
+    </div>
+</div>
+{% endblock %}

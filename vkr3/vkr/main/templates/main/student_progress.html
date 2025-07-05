@@ -1,0 +1,318 @@
+{% extends 'main/base.html' %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+        .nav-pills .nav-link {
+            background-color: #e9ecef;
+            color: #007bff;
+            margin-right: 5px;
+            border-radius: 20px;
+            transition: all 0.2s;
+        }
+        .nav-pills .nav-link:hover {
+            background-color: #d6d8db;
+        }
+
+        .nav-pills .nav-link.active {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+        }
+        /* Обычные вкладки */
+        /* Все вкладки: черный текст, белый фон */
+        .nav-tabs .nav-link {
+            color: #000 !important;
+            background-color: #fff !important;
+            border: 1px solid #dee2e6;
+            margin-right: 2px;
+        }
+
+        /* Активная вкладка */
+        .nav-tabs .nav-link.active {
+            color: #000 !important;
+            background-color: #e9ecef !important;
+            border-color: #dee2e6 #dee2e6 #fff;
+        }
+
+        /* Ховер */
+        .nav-tabs .nav-link:hover {
+            color: #000 !important;
+            background-color: #f8f9fa !important;
+        }
+        .nav-tabs.semester-tabs {
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+        }
+    .card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    }
+
+    .badge {
+        font-size: 0.9rem;
+        padding: 0.5em 0.75em;
+    }
+
+    .progress {
+        background-color: #dee2e6;
+    }
+
+    .progress-bar {
+        font-weight: bold;
+    }
+    body {
+    background-color: #f8f9fa;
+    }
+    .card {
+        border: none;
+        border-radius: 16px;
+        background-color: #fff;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        transition: box-shadow 0.3s;
+    }
+    .card:hover {
+        box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+    }
+
+    .progress {
+        height: 20px;
+        background-color: #e9ecef;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    .progress-bar {
+        font-weight: bold;
+        font-size: 14px;
+    }
+
+    .badge {
+        padding: 0.5em 0.75em;
+        font-size: 0.85rem;
+        border-radius: 10px;
+    }
+
+    button.btn-outline-primary.btn-sm {
+        border-radius: 30px;
+        font-size: 0.85rem;
+        transition: background-color 0.2s;
+    }
+
+</style>
+<h2>Прогресс по дисциплинам</h2>
+
+<!-- Вкладки по курсам -->
+<ul class="nav nav-pills mt-3" id="courseTabs" role="tablist">
+    {% for course_data in progress_data %}
+        <li class="nav-item" role="presentation">
+            <button class="nav-link {% if forloop.first %}active{% endif %}"
+                    id="course-tab-{{ course_data.course }}"
+                    data-bs-toggle="tab"
+                    data-bs-target="#course-{{ course_data.course }}"
+                    type="button" role="tab">
+                {{ course_data.course }} курс
+            </button>
+        </li>
+    {% endfor %}
+</ul>
+
+<!-- Контейнер с содержимым курсов -->
+<div class="tab-content" id="courseTabsContent">
+    {% for course_data in progress_data %}
+        <div class="tab-pane fade {% if forloop.first %}show active{% endif %}"
+             id="course-{{ course_data.course }}"
+             role="tabpanel">
+
+            <!-- Вкладки по семестрам -->
+            <ul class="nav nav-tabs semester-tabs" id="semesterTabs-{{ course_data.course }}" role="tablist">
+                {% for sem in course_data.semesters %}
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link {% if forloop.first %}active{% endif %}"
+                                id="semester-tab-{{ course_data.course }}-{{ sem.semester }}"
+                                data-bs-toggle="pill"
+                                data-bs-target="#semester-{{ course_data.course }}-{{ sem.semester }}"
+                                type="button" role="tab">
+                            {{ sem.semester }} семестр
+                        </button>
+                    </li>
+                {% endfor %}
+            </ul>
+
+            <!-- Контент по семестрам -->
+            <div class="tab-content mt-3" id="semesterContent-{{ course_data.course }}">
+                {% for sem in course_data.semesters %}
+                    <div class="tab-pane fade {% if forloop.first %}show active{% endif %}"
+                         id="semester-{{ course_data.course }}-{{ sem.semester }}"
+                         role="tabpanel">
+
+                        {% for discipline in sem.disciplines %}
+                            <div class="card mb-4 shadow-sm">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h5 class="card-title mb-0">{{ discipline.subject }}</h5>
+                                        <button class="btn btn-outline-primary btn-sm"
+                                                type="button"
+                                                data-bs-toggle="collapse"
+                                                data-bs-target="#details-{{ forloop.counter }}"
+                                                aria-expanded="false"
+                                                aria-controls="details-{{ forloop.counter }}">
+                                            Подробнее
+                                        </button>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar
+                                                {% if discipline.progress >= 80 %}bg-success
+                                                {% elif discipline.progress >= 50 %}bg-warning
+                                                {% else %}bg-danger{% endif %}"
+                                                 role="progressbar"
+                                                 style="width: {{ discipline.progress }}%;"
+                                                 aria-valuenow="{{ discipline.progress }}"
+                                                 aria-valuemin="0" aria-valuemax="100">
+                                                {{ discipline.progress }}%
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="collapse" id="details-{{ forloop.counter }}">
+                                        {% if discipline.labs %}
+                                        <div class="mb-2">
+                                            <strong>Лабораторные:</strong>
+                                            <div class="d-flex flex-wrap gap-2 mt-1">
+                                                {% for lab in discipline.labs %}
+                                                    <span class="badge {% if lab.status == '✅' %}bg-success{% else %}bg-secondary{% endif %}">
+                                                        {{ lab.label }}
+                                                    </span>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        {% endif %}
+
+                                        {% if discipline.practices %}
+                                        <div class="mb-2">
+                                            <strong>Практики:</strong>
+                                            <div class="d-flex flex-wrap gap-2 mt-1">
+                                                {% for pr in discipline.practices %}
+                                                    <span class="badge {% if pr.status != '❌' %}bg-success{% else %}bg-secondary{% endif %}">
+                                                        {{ pr.label }} ({{ pr.status }})
+                                                    </span>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        {% endif %}
+
+                                        {% if discipline.other_works %}
+                                        <div class="mb-2">
+                                            <strong>Прочие работы:</strong>
+                                            <div class="d-flex flex-wrap gap-2 mt-1">
+                                                {% for work in discipline.other_works %}
+                                                    <span class="badge {% if work.status != '❌' %}bg-success{% else %}bg-secondary{% endif %}">
+                                                        {{ work.label }} ({{ work.status }})
+                                                    </span>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        {% endif %}
+
+                                        {% if discipline.control_works %}
+                                        <div class="mb-2">
+                                            <strong>Контроль:</strong>
+                                            <div class="d-flex flex-wrap gap-2 mt-1">
+                                                {% for ctrl in discipline.control_works %}
+                                                    <span class="badge {% if ctrl.status != '❌' %}bg-success{% else %}bg-secondary{% endif %}">
+                                                        {{ ctrl.label }} ({{ ctrl.status }})
+                                                    </span>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+
+                        {% empty %}
+                            <p>Нет дисциплин в этом семестре.</p>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+<!-- Аналитика -->
+<div class="mt-5">
+    <h3 class="mb-4">📊 Аналитика успеваемости</h3>
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card p-3">
+                <h5 class="card-title">Средний прогресс по курсам</h5>
+                <canvas id="courseProgressChart" width="400" height="400"></canvas>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card p-3">
+                <h5 class="card-title">Средняя успеваемость по семестрам</h5>
+                <canvas id="semesterProgressChart" width="400" height="400"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const courseLabels = [{% for course in progress_data %}"{{ course.course }}"{% if not forloop.last %}, {% endif %}{% endfor %}];
+    const courseProgress = [{% for course in progress_data %}{{ course.avg_progress|default:0 }}{% if not forloop.last %}, {% endif %}{% endfor %}];
+
+    const semesterLabels = [{% for course_data in progress_data %}{% for sem in course_data.semesters %}
+        "{{ course_data.course }} курс, {{ sem.semester }} сем."{% if not forloop.last or not forloop.parentloop.last %}, {% endif %}
+    {% endfor %}{% endfor %}];
+
+    const semesterValues = [{% for course_data in progress_data %}{% for sem in course_data.semesters %}
+        {{ sem.avg_progress|default:0 }}{% if not forloop.last or not forloop.parentloop.last %}, {% endif %}
+    {% endfor %}{% endfor %}];
+
+    // Круговая диаграмма по курсам
+    new Chart(document.getElementById("courseProgressChart"), {
+        type: 'doughnut',
+        data: {
+            labels: courseLabels,
+            datasets: [{
+                label: 'Средний прогресс',
+                data: courseProgress,
+                backgroundColor: ['#0d6efd', '#6610f2', '#198754', '#ffc107'],
+                hoverOffset: 10
+            }]
+        },
+        options: {
+            responsive: false,
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+
+    // Столбчатая диаграмма по семестрам
+    new Chart(document.getElementById("semesterProgressChart"), {
+        type: 'bar',
+        data: {
+            labels: semesterLabels,
+            datasets: [{
+                label: 'Средний % успеваемости',
+                data: semesterValues,
+                backgroundColor: '#0d6efd'
+            }]
+        },
+        options: {
+            responsive: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    title: { display: true, text: '%' }
+                }
+            }
+        }
+    });
+</script>
+
+{% endblock %}

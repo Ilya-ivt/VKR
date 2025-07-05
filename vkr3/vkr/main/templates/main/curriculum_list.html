@@ -1,0 +1,26 @@
+{% extends "main/base.html" %}
+
+{% block content %}
+<h2>📚 Список учебных планов</h2>
+
+<a href="{% url 'main:upload_curriculum' %}" class="btn btn-primary mb-3">📤 Загрузить новый план</a>
+
+<ul class="list-group">
+    {% for plan in plans %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>{{ plan.title }}</span>
+            <div class="d-flex gap-2">
+                <a href="{% url 'main:curriculum' plan.id %}" class="btn btn-sm btn-outline-primary">Посмотреть</a>
+                <form action="{% url 'main:delete_curriculum' plan.id %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-outline-danger"
+                            onclick="return confirm('Удалить этот учебный план?');">
+                        Удалить
+                    </button>
+                </form>
+            </div>
+        </li>
+    {% endfor %}
+</ul>
+{% endblock %}
+

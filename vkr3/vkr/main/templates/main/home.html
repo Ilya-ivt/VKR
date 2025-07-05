@@ -1,0 +1,41 @@
+{% extends "main/base.html" %}
+
+{% block title %}Главная{% endblock %}
+
+{% block content %}
+<div class="container py-5 text-center" style="max-width: 800px;">
+    <div class="mb-4">
+        <img src="https://cdn-icons-png.flaticon.com/512/3135/3135768.png" alt="Academic Icon" width="100">
+    </div>
+
+    {% if user.is_authenticated %}
+        <h1 class="display-5 mb-3 fw-semibold text-dark">Добро пожаловать, {{ user.first_name|default:user.username }}!</h1>
+        <p class="lead text-muted">
+            Ваше образование начинается здесь. Управляйте курсами, следите за успехами и стремитесь к знаниям.
+        </p>
+
+        <div class="mt-4 d-flex justify-content-center gap-3 flex-wrap">
+            <a href="{% url 'main:profile' %}" class="btn btn-outline-primary btn-lg px-4">👤 Профиль</a>
+
+            {% if user.role == 'student' %}
+                <a href="{% url 'main:student_progress' %}" class="btn btn-outline-success btn-lg px-4">📈 Мой прогресс</a>
+            {% elif user.role == 'teacher' or user.role == 'admin' %}
+                <a href="{% url 'main:teacher_subjects' %}" class="btn btn-outline-dark btn-lg px-4">📚 Мои дисциплины</a>
+            {% endif %}
+        </div>
+    {% else %}
+        <h1 class="display-5 mb-3 fw-semibold text-dark">Добро пожаловать в Учебный Портал!</h1>
+        <p class="lead text-muted">
+            Чтобы получить доступ к функциям системы, пожалуйста, войдите в свой аккаунт или зарегистрируйтесь.
+        </p>
+        <div class="mt-4 d-flex justify-content-center gap-3 flex-wrap">
+            <a href="{% url 'main:login' %}" class="btn btn-primary btn-lg px-4">🔑 Войти</a>
+            <a href="{% url 'main:register' %}" class="btn btn-outline-secondary btn-lg px-4">📝 Регистрация</a>
+        </div>
+    {% endif %}
+
+    <p class="text-muted mt-5 fst-italic">
+        “Образование — это не наполнение ведра, а разжигание огня.” — У. Б. Йейтс
+    </p>
+</div>
+{% endblock %}

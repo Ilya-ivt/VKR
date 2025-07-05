@@ -1,0 +1,311 @@
+import random
+from PyQt5.QtWidgets import (
+    QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QFileDialog, QLabel, QTextEdit
+)
+import os
+
+def is_prime_lehmann(n, k=10):
+    #Тест Лемана для проверки числа на простоту
+    if n < 2:
+        return False
+    if n % 2 == 0 and n > 2:
+        return False
+
+    for _ in range(k):
+        a = random.randint(2, n - 2)
+        x = pow(a, (n - 1) // 2, n)
+        if x not in (1, n - 1):
+            return False
+    return True
+
+def generate_prime(bit_length):
+    #Генерация простого числа с использованием теста Лемана
+    while True:
+        candidate = random.getrandbits(bit_length)
+        candidate |= (1 << (bit_length - 1)) | 1  # Установить старший и младший биты
+        if is_prime_lehmann(candidate):
+            return candidate
+
+def generate_rsa_keys():
+    #Генерация пары ключей RSA
+    bit_length = 128  # Простые числа длиной не менее 128 бит
+    p = generate_prime(bit_length)
+    q = generate_prime(bit_length)
+
+    n = p * q
+    phi = (p - 1) * (q - 1)
+
+    e = 65537  # Обычно используется фиксированное значение e
+    d = pow(e, -1, phi)  # Вычисляем обратное значение для e
+
+    public_key = (e, n)
+    private_key = (d, n)
+
+    return public_key, private_key
+
+def rsa_encrypt(data, public_key):
+    #Шифрует данные с использованием открытого ключа
+    e, n = public_key
+    return [pow(byte, e, n) for byte in data]
+
+def rsa_decrypt(encrypted_data, private_key):
+    #Дешифрует данные с использованием закрытого ключа
+    d, n = private_key
+    return bytes([pow(byte, d, n) for byte in encrypted_data])
+
+class RSAApp(QMainWindow):
+    def __init__(self):
+        super().__init__()
+
+        self.setWindowTitle("RSA Encryption App")
+        self.setGeometry(100, 100, 600, 400)
+
+        self.init_ui()
+
+        # Переменные для ключей
+        self.public_key = None
+        self.private_key = None
+
+    def init_ui(self):
+        #Инициализация интерфейса
+        self.central_widget = QWidget(self)
+        self.layout = QVBoxLayout(self.central_widget)
+
+        # Кнопки и текстовые поля
+        self.generate_prime_button = QPushButton("Сгенерировать простое число", self)
+        self.generate_keys_button = QPushButton("Сгенерировать ключи", self)
+        self.encrypt_button = QPushButton("Шифровать файл", self)
+        self.decrypt_button = QPushButton("Дешифровать файл", self)
+        self.result_label = QLabel("Результат будет отображен здесь", self)
+
+        # Добавление элементов в layout
+        self.layout.addWidget(self.generate_prime_button)
+        self.layout.addWidget(self.generate_keys_button)
+        self.layout.addWidget(self.encrypt_button)
+        self.layout.addWidget(self.decrypt_button)
+        self.layout.addWidget(self.result_label)
+
+        # Привязка кнопок к методам
+        self.generate_prime_button.clicked.connect(self.generate_prime)
+        self.generate_keys_button.clicked.connect(self.generate_keys)
+        self.encrypt_button.clicked.connect(self.encrypt_file)
+        self.decrypt_button.clicked.connect(self.decrypt_file)
+
+        self.setCentralWidget(self.central_widget)
+
+    def generate_prime(self):
+        #Генерация простого числа
+        prime = generate_prime(128)
+        self.result_label.setText(f"Сгенерированное простое число: {prime}")
+
+    def generate_keys(self):
+        #Генерация пары ключей RSA
+        self.public_key, self.private_key = generate_rsa_keys()
+        self.result_label.setText(
+            f"Открытый ключ: {self.public_key}\nЗакрытый ключ: {self.private_key}"
+        )
+
+    def encrypt_file(self):
+        #Шифрование файла
+        if not self.public_key:
+            self.result_label.setText("Сначала сгенерируйте ключи!")
+            return
+
+        file_path, _ = QFileDialog.getOpenFileName(self, "Выберите файл для шифрования")
+        if not file_path:
+            return
+
+        with open(file_path, "rb") as f:
+            data = f.read()
+
+        encrypted_data = rsa_encrypt(data, self.public_key)
+
+        save_path, _ = QFileDialog.getSaveFileName(self, "Сохранить зашифрованный файл")
+        if save_path:
+            with open(save_path, "w") as f:
+                f.write(" ".join(map(str, encrypted_data)))
+            self.result_label.setText(f"Файл успешно зашифрован и сохранен в {save_path}")
+
+    def decrypt_file(self):
+        #Дешифрование файла
+        if not self.private_key:
+            self.result_label.setText("Сначала сгенерируйте ключи!")
+            return
+
+        file_path, _ = QFileDialog.getOpenFileName(self, "Выберите файл для дешифрования")
+        if not file_path:
+            return
+
+        with open(file_path, "r") as f:
+            encrypted_data = list(map(int, f.read().split()))
+
+        decrypted_data = rsa_decrypt(encrypted_data, self.private_key)
+
+        save_path, _ = QFileDialog.getSaveFileName(self, "Сохранить дешифрованный файл")
+        if save_path:
+            with open(save_path, "wb") as f:
+                f.write(decrypted_data)
+            self.result_label.setText(f"Файл успешно дешифрован и сохранен в {save_path}")
+
+
+# Запуск приложения
+if __name__ == "__main__":
+    app = QApplication([])
+    window = RSAApp()
+    window.show()
+    app.exec_()import random
+from PyQt5.QtWidgets import (
+    QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QFileDialog, QLabel, QTextEdit
+)
+import os
+
+def is_prime_lehmann(n, k=10):
+    #Тест Лемана для проверки числа на простоту
+    if n < 2:
+        return False
+    if n % 2 == 0 and n > 2:
+        return False
+
+    for _ in range(k):
+        a = random.randint(2, n - 2)
+        x = pow(a, (n - 1) // 2, n)
+        if x not in (1, n - 1):
+            return False
+    return True
+
+def generate_prime(bit_length):
+    #Генерация простого числа с использованием теста Лемана
+    while True:
+        candidate = random.getrandbits(bit_length)
+        candidate |= (1 << (bit_length - 1)) | 1  # Установить старший и младший биты
+        if is_prime_lehmann(candidate):
+            return candidate
+
+def generate_rsa_keys():
+    #Генерация пары ключей RSA
+    bit_length = 128  # Простые числа длиной не менее 128 бит
+    p = generate_prime(bit_length)
+    q = generate_prime(bit_length)
+
+    n = p * q
+    phi = (p - 1) * (q - 1)
+
+    e = 65537  # Обычно используется фиксированное значение e
+    d = pow(e, -1, phi)  # Вычисляем обратное значение для e
+
+    public_key = (e, n)
+    private_key = (d, n)
+
+    return public_key, private_key
+
+def rsa_encrypt(data, public_key):
+    #Шифрует данные с использованием открытого ключа
+    e, n = public_key
+    return [pow(byte, e, n) for byte in data]
+
+def rsa_decrypt(encrypted_data, private_key):
+    #Дешифрует данные с использованием закрытого ключа
+    d, n = private_key
+    return bytes([pow(byte, d, n) for byte in encrypted_data])
+
+class RSAApp(QMainWindow):
+    def __init__(self):
+        super().__init__()
+
+        self.setWindowTitle("RSA Encryption App")
+        self.setGeometry(100, 100, 600, 400)
+
+        self.init_ui()
+
+        # Переменные для ключей
+        self.public_key = None
+        self.private_key = None
+
+    def init_ui(self):
+        #Инициализация интерфейса
+        self.central_widget = QWidget(self)
+        self.layout = QVBoxLayout(self.central_widget)
+
+        # Кнопки и текстовые поля
+        self.generate_prime_button = QPushButton("Сгенерировать простое число", self)
+        self.generate_keys_button = QPushButton("Сгенерировать ключи", self)
+        self.encrypt_button = QPushButton("Шифровать файл", self)
+        self.decrypt_button = QPushButton("Дешифровать файл", self)
+        self.result_label = QLabel("Результат будет отображен здесь", self)
+
+        # Добавление элементов в layout
+        self.layout.addWidget(self.generate_prime_button)
+        self.layout.addWidget(self.generate_keys_button)
+        self.layout.addWidget(self.encrypt_button)
+        self.layout.addWidget(self.decrypt_button)
+        self.layout.addWidget(self.result_label)
+
+        # Привязка кнопок к методам
+        self.generate_prime_button.clicked.connect(self.generate_prime)
+        self.generate_keys_button.clicked.connect(self.generate_keys)
+        self.encrypt_button.clicked.connect(self.encrypt_file)
+        self.decrypt_button.clicked.connect(self.decrypt_file)
+
+        self.setCentralWidget(self.central_widget)
+
+    def generate_prime(self):
+        #Генерация простого числа
+        prime = generate_prime(128)
+        self.result_label.setText(f"Сгенерированное простое число: {prime}")
+
+    def generate_keys(self):
+        #Генерация пары ключей RSA
+        self.public_key, self.private_key = generate_rsa_keys()
+        self.result_label.setText(
+            f"Открытый ключ: {self.public_key}\nЗакрытый ключ: {self.private_key}"
+        )
+
+    def encrypt_file(self):
+        #Шифрование файла
+        if not self.public_key:
+            self.result_label.setText("Сначала сгенерируйте ключи!")
+            return
+
+        file_path, _ = QFileDialog.getOpenFileName(self, "Выберите файл для шифрования")
+        if not file_path:
+            return
+
+        with open(file_path, "rb") as f:
+            data = f.read()
+
+        encrypted_data = rsa_encrypt(data, self.public_key)
+
+        save_path, _ = QFileDialog.getSaveFileName(self, "Сохранить зашифрованный файл")
+        if save_path:
+            with open(save_path, "w") as f:
+                f.write(" ".join(map(str, encrypted_data)))
+            self.result_label.setText(f"Файл успешно зашифрован и сохранен в {save_path}")
+
+    def decrypt_file(self):
+        #Дешифрование файла
+        if not self.private_key:
+            self.result_label.setText("Сначала сгенерируйте ключи!")
+            return
+
+        file_path, _ = QFileDialog.getOpenFileName(self, "Выберите файл для дешифрования")
+        if not file_path:
+            return
+
+        with open(file_path, "r") as f:
+            encrypted_data = list(map(int, f.read().split()))
+
+        decrypted_data = rsa_decrypt(encrypted_data, self.private_key)
+
+        save_path, _ = QFileDialog.getSaveFileName(self, "Сохранить дешифрованный файл")
+        if save_path:
+            with open(save_path, "wb") as f:
+                f.write(decrypted_data)
+            self.result_label.setText(f"Файл успешно дешифрован и сохранен в {save_path}")
+
+
+# Запуск приложения
+if __name__ == "__main__":
+    app = QApplication([])
+    window = RSAApp()
+    window.show()
+    app.exec_()

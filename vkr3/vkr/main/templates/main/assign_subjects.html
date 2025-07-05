@@ -1,0 +1,75 @@
+{% extends "main/base.html" %}
+{% block content %}
+
+<div class="container mt-4">
+    <h2 class="mb-4">📚 Назначение дисциплин преподавателю:
+        <span class="text-primary">{{ teacher.get_full_name }}</span>
+    </h2>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="accordion" id="groupAccordion">
+            {% regroup assignments by group as grouped_assignments %}
+            {% for group in grouped_assignments %}
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading-{{ forloop.counter }}">
+                        <button class="accordion-button collapsed" type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#collapse-{{ forloop.counter }}"
+                                aria-expanded="false"
+                                aria-controls="collapse-{{ forloop.counter }}">
+                            Группа {{ group.grouper.name }}
+                        </button>
+                    </h2>
+                    <div id="collapse-{{ forloop.counter }}"
+                         class="accordion-collapse collapse"
+                         aria-labelledby="heading-{{ forloop.counter }}"
+                         data-bs-parent="#groupAccordion">
+                        <div class="accordion-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Дисциплина</th>
+                                            <th>Курс</th>
+                                            <th>Семестр</th>
+                                            <th>Текущий преподаватель</th>
+                                            <th class="text-center">Назначить</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for a in group.list %}
+                                            <tr>
+                                                <td>{{ a.curriculum_item.subject.name }}</td>
+                                                <td>{{ a.curriculum_item.course }}</td>
+                                                <td>{{ a.curriculum_item.semester }}</td>
+                                                <td>
+                                                    {% if a.teacher %}
+                                                        <span class="badge bg-success">{{ a.teacher.get_full_name }}</span>
+                                                    {% else %}
+                                                        <span class="text-muted">не назначен</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td class="text-center">
+                                                    <input class="form-check-input" type="checkbox" name="assignments" value="{{ a.id }}"
+                                                        {% if a.teacher == teacher %}checked{% endif %}>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="text-end mt-4">
+            <button type="submit" class="btn btn-primary">💾 Сохранить изменения</button>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

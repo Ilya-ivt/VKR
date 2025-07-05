@@ -1,0 +1,166 @@
+{% extends "main/base.html" %}
+{% load static %}
+{% load dict_extras %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>📚 Мои дисциплины</h2>
+
+    {% if assignments %}
+        <div class="accordion" id="assignmentAccordion">
+            {% for a in assignments %}
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading{{ forloop.counter }}">
+                        <button class="accordion-button collapsed" type="button"
+                                data-bs-toggle="collapse" data-bs-target="#collapse{{ forloop.counter }}"
+                                aria-expanded="false" aria-controls="collapse{{ forloop.counter }}">
+                            {{ a.subject_name }} — группа {{ a.group.name }},
+                            {{ a.curriculum_item.course }} курс, {{ a.curriculum_item.semester }} семестр
+                            {% if a.progress_percent >= 75 %}
+                              <span class="badge bg-success ms-2">{{ a.progress_percent }}%</span>
+                            {% elif a.progress_percent >= 50 %}
+                              <span class="badge bg-warning text-dark ms-2">{{ a.progress_percent }}%</span>
+                            {% else %}
+                              <span class="badge bg-danger ms-2">{{ a.progress_percent }}%</span>
+                            {% endif %}
+                        </button>
+                    </h2>
+                    <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse"
+                         aria-labelledby="heading{{ forloop.counter }}" data-bs-parent="#assignmentAccordion">
+                        <div class="accordion-body">
+
+                            {% if a.has_labs or a.has_practice %}
+                                <form method="post" class="row g-2 align-items-center mb-3">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="update_type" value="both">
+                                    <input type="hidden" name="assignment_id" value="{{ a.id }}">
+
+                                    {% if a.has_labs %}
+                                        <div class="col-auto">
+                                            <label for="labs_{{ a.id }}" class="col-form-label">Лабораторные</label>
+                                        </div>
+                                        <div class="col-auto">
+                                            <input type="number" id="labs_{{ a.id }}" name="labs_{{ a.id }}" min="0"
+                                                   class="form-control form-control-sm" value="{{ a.lab_count_display }}">
+                                        </div>
+                                    {% endif %}
+
+                                    {% if a.has_practice %}
+                                        <div class="col-auto">
+                                            <label for="practices_{{ a.id }}" class="col-form-label">Практики</label>
+                                        </div>
+                                        <div class="col-auto">
+                                            <input type="number" id="practices_{{ a.id }}" name="practices_{{ a.id }}" min="0"
+                                                   class="form-control form-control-sm" value="{{ a.practice_count_display }}">
+                                        </div>
+                                    {% endif %}
+
+                                    <div class="col-auto">
+                                        <button class="btn btn-primary btn-sm" type="submit">💾 Обновить</button>
+                                    </div>
+                                </form>
+                            {% endif %}
+
+                            {% if a.has_labs or a.practice_range or a.work_types or a.control_types %}
+                                <form method="post" action="{% url 'main:grade_students' assignment_id=a.id %}">
+                                    {% csrf_token %}
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-sm align-middle">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Студент</th>
+                                                    {% for i in a.lab_range %}
+                                                        <th>Лаб. {{ i|add:1 }}</th>
+                                                    {% endfor %}
+                                                    {% for i in a.practice_range %}
+                                                        <th>Пр. {{ i|add:1 }}</th>
+                                                    {% endfor %}
+                                                    {% for wt in a.work_types %}
+                                                        <th>{{ wt }}</th>
+                                                    {% endfor %}
+                                                    {% for ct in a.control_types %}
+                                                        <th>{{ ct }}</th>
+                                                    {% endfor %}
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+
+                                                {% for student in a.students %}
+                                                    <tr>
+                                                        <td>{{ student.get_full_name }}</td>
+
+                                                        {# Лабораторные работы #}
+                                                        {% for i in a.lab_range %}
+                                                          <td>
+                                                           {% with work=student.lab_works|get_item_int:i %}
+                                                              <input type="checkbox" name="lab_{{ student.id }}_{{ i }}"
+                                                                     {% if work and work.is_completed %}checked{% endif %}>
+                                                           {% endwith %}
+                                                          </td>
+                                                        {% endfor %}
+
+                                                        {# Практические работы #}
+                                                        {% for i in a.practice_range %}
+                                                            <td>
+                                                                {% with practice=student.practice_works|get_item_int:i %}
+                                                                    <input type="number" name="practice_{{ student.id }}_{{ i }}"
+                                                                           min="2" max="5" class="form-control form-control-sm"
+                                                                           value="{{ practice.grade|default_if_none:'' }}">
+                                                                {% endwith %}
+                                                            </td>
+                                                        {% endfor %}
+
+                                                        {# Доп. работы #}
+                                                        {% for wt in a.work_types %}
+                                                            <td>
+                                                                {% with work_item=student.work_grades|get_item_int:wt %}
+                                                                    <input type="number" name="work_{{ wt|slugify }}_{{ student.id }}"
+                                                                           min="2" max="5" class="form-control form-control-sm"
+                                                                           value="{{ work_item.grade|default_if_none:'' }}">
+                                                                {% endwith %}
+                                                            </td>
+                                                        {% endfor %}
+
+                                                        {# Контрольные формы #}
+                                                        {% for ct in a.control_types %}
+                                                            <td>
+                                                                {% with ctrl=student.work_grades|get_item_int:ct %}
+                                                                    {% if ct == 'зачет' %}
+                                                                        <select name="control_{{ ct|slugify }}_{{ student.id }}" class="form-select form-select-sm">
+                                                                            <option value="">—</option>
+                                                                            <option value="1" {% if ctrl and ctrl.is_passed %}selected{% endif %}>Зачтено</option>
+                                                                            <option value="0" {% if ctrl and not ctrl.is_passed %}selected{% endif %}>Не зачтено</option>
+                                                                        </select>
+                                                                    {% else %}
+                                                                        <input type="number" name="control_{{ ct|slugify }}_{{ student.id }}"
+                                                                               min="2" max="5" class="form-control form-control-sm"
+                                                                               value="{{ ctrl.grade|default_if_none:'' }}">
+                                                                    {% endif %}
+                                                                {% endwith %}
+                                                            </td>
+                                                        {% endfor %}
+                                                    </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div class="text-end mt-2">
+                                        <button class="btn btn-success btn-sm" type="submit">💾 Сохранить</button>
+                                        <a href="{% url 'main:export_student_works_excel' assignment_id=a.id %}" class="btn btn-outline-secondary btn-sm">
+                                            ⬇️ Экспорт
+                                        </a>
+                                    </div>
+                                </form>
+                            {% else %}
+                                <div class="text-muted">Нет назначенных работ для этой дисциплины.</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-muted">У вас пока нет назначенных дисциплин.</p>
+    {% endif %}
+</div>
+{% endblock %}

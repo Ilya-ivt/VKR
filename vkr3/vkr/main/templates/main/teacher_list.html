@@ -1,0 +1,12 @@
+{% extends "main/base.html" %}
+{% block content %}
+<h2>👨‍🏫 Преподаватели</h2>
+<ul class="list-group">
+    {% for teacher in teachers %}
+        <li class="list-group-item d-flex justify-content-between">
+            <span>{{ teacher.get_full_name }} ({{ teacher.role }})</span>
+            <a href="{% url 'main:assign_subjects' teacher.id %}" class="btn btn-primary btn-sm">Назначить предметы</a>
+        </li>
+    {% endfor %}
+</ul>
+{% endblock %}

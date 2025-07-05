@@ -1,0 +1,13 @@
+{% extends "main/base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2>Редактирование курса: {{ course.title }}</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+        <a href="{% url 'main:course_detail' course_id=course.id %}" class="btn btn-secondary">Отмена</a>
+    </form>
+</div>
+{% endblock %}

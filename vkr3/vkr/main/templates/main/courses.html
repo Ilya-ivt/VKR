@@ -1,0 +1,136 @@
+{% extends "main/base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-3">Курсы</h2>
+
+    <!-- Навигационные вкладки -->
+    <ul class="nav nav-tabs" id="courseTabs">
+        <li class="nav-item">
+            <a class="nav-link active" id="my-courses-tab" data-bs-toggle="tab" href="#my-courses">Мои курсы</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="all-courses-tab" data-bs-toggle="tab" href="#all-courses">Все курсы</a>
+        </li>
+    </ul>
+
+    <style>
+        .nav-tabs .nav-link {
+            color: black !important;
+        }
+        .nav-tabs .nav-link.active {
+            font-weight: bold;
+            background-color: #e9ecef;
+        }
+        .course-card {
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease-in-out;
+            background-color: #fff;
+        }
+        .course-card:hover {
+            transform: scale(1.03);
+        }
+        .course-card .card-body {
+            padding: 20px;
+        }
+        .course-card .card-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        .course-card .card-text {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+    </style>
+
+    <div class="tab-content mt-3">
+        <!-- Вкладка "Мои курсы" -->
+        <div class="tab-pane fade show active" id="my-courses">
+            {% if user.role == "teacher" or user.is_superuser %}
+                <a href="{% url 'main:create_course' %}" class="btn btn-success mb-3">Создать курс</a>
+                <h4 class="mb-3">Курсы, которые вы создали:</h4>
+                <div class="row">
+                    {% for course in created_courses %}
+                        <div class="col-md-4 mb-4">
+                            <div class="card course-card">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ course.title }}</h5>
+                                    <p class="card-text">{{ course.description|truncatechars:100 }}</p>
+                                    <a href="{% url 'main:course_detail' course.id %}" class="btn btn-primary w-100">Перейти к курсу</a>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <p>Вы еще не создали ни одного курса!</p>
+                    {% endfor %}
+                </div>
+            {% elif user.role == "student" %}
+                <h4 class="mb-3">Курсы, на которые вы записаны:</h4>
+                <div class="row">
+                    {% for course in enrolled_courses %}
+                        <div class="col-md-4 mb-4">
+                            <div class="card course-card">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ course.title }}</h5>
+                                    <p class="card-text">{{ course.description|truncatechars:100 }}</p>
+                                    <a href="{% url 'main:course_detail' course.id %}" class="btn btn-primary w-100">Перейти к курсу</a>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <p>Вы еще не записаны ни на один курс.</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Вкладка "Все курсы" -->
+        <div class="tab-pane fade" id="all-courses">
+            <form method="GET" class="d-flex mb-3">
+                <input type="text" name="q" class="form-control me-3" placeholder="Поиск курса..." value="{{ request.GET.q }}">
+                <button type="submit" class="btn btn-primary">Найти</button>
+            </form>
+
+            <div class="row">
+                {% for course in courses %}
+                    <div class="col-md-4 mb-4">
+                        <div class="card course-card">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ course.title }}</h5>
+                                <p class="card-text">{{ course.description|truncatechars:100 }}</p>
+                                <small class="text-muted d-block mb-2">Преподаватель: {{ course.teacher.username }}</small>
+                                <a href="{% url 'main:course_detail' course.id %}" class="btn btn-primary w-100">Перейти к курсу</a>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p>Курсов пока нет.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS для работы вкладок -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        let activeTab = localStorage.getItem("activeTab");
+        if (!activeTab) {
+            activeTab = "#all-courses";  // По умолчанию вкладка "Все курсы"
+        }
+        let tabElement = document.querySelector(`a[href="${activeTab}"]`);
+        if (tabElement) {
+            new bootstrap.Tab(tabElement).show();
+        }
+
+        // Сохраняем активную вкладку в localStorage при переключении
+        document.querySelectorAll('.nav-tabs a').forEach(tab => {
+            tab.addEventListener("shown.bs.tab", function (event) {
+                localStorage.setItem("activeTab", event.target.getAttribute("href"));
+            });
+        });
+    });
+</script>
+
+{% endblock %}

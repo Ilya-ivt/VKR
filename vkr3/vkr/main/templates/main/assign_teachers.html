@@ -1,0 +1,16 @@
+{% extends 'main/base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Назначить преподавателей</h2>
+    <form method="post">
+        {% csrf_token %}
+        {% for item, form in forms %}
+            <div class="card mb-3 p-3">
+                <strong>{{ item.subject.name }}</strong><br>
+                {{ form.teacher.label_tag }} {{ form.teacher }}
+            </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+    </form>
+</div>
+{% endblock %}
